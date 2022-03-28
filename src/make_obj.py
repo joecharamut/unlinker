@@ -215,12 +215,12 @@ class ElfSymbolTable(ElfSection):
     def to_bytes(self, string_table: ElfStringTable = None, **kwargs):
         buf = ByteBuffer()
 
-        local_syms = 1
-        for name, value, size, sym_type, binding, index in self._entries:
-            if binding == ElfSymbolBind.STB_LOCAL:
-                local_syms += 1
+        # local_syms = 1
+        # for name, value, size, sym_type, binding, index in self._entries:
+        #     if binding == ElfSymbolBind.STB_LOCAL:
+        #         local_syms += 1
 
-        self.info = local_syms
+        self.info = len(self._entries) + 1
 
         buf.write(b"\0" * self.entsize)  # null entry
         for i, (name, value, size, sym_type, binding, index) in enumerate(self._entries):
@@ -383,6 +383,10 @@ class ElfFile:
         self.add_section(self._sh_strings, ".shstrtab")
 
         self._syms.link = self.section_index(".strtab")
+
+        if self._rels:
+            self._rels.link = self.section_index(".symtab")
+            self._rels.info = self.section_index(".text")
 
         buf = ByteBuffer()
 
